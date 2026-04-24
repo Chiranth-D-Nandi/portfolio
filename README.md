@@ -1,4 +1,4 @@
-# **Chiranth D Nandi's Personal Portfolio Website created using MERN stack.8**
+# **Chiranth D Nandi's Personal Portfolio Website created using MERN stack.**
 
 A responsive, animated personal portfolio built with **React + Vite**, featuring custom WebGL visuals, a scroll-aware navigation system, and a full-stack likes backend.
 
