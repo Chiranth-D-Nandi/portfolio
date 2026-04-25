@@ -1,18 +1,114 @@
-# React + Vite
+# **Chiranth D Nandi's Personal Portfolio Website created using MERN stack.**
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+A responsive, animated personal portfolio built with **React + Vite**, featuring custom WebGL visuals, a scroll-aware navigation system, and a full-stack likes backend.
 
-Currently, two official plugins are available:
+🌐 **Live site:** https://chiranth-nandi.vercel.app/
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+---
 
-## React Compiler
+## Features
 
-The React Compiler is enabled on this template. See [this documentation](https://react.dev/learn/react-compiler) for more information.
+- **Animated hero** — interactive 3D Orb rendered with OGL (WebGL) and an animated Dot Grid background, both built as custom React components
+- **Scroll-aware navbar** — switches text color dynamically based on whichever section is in view
+- **Image carousels** — per-section carousels with GitHub links and a per-project like counter
+- **Scrolling tech ticker** — auto-playing logo loop of the full tech stack
+- **3D Dome Gallery** — custom Three.js photo gallery component
+- **Responsive layout** — fully adapted for mobile with a hamburger menu and dynamically recalculated timeline positioning
+- **Likes backend** — per-project like counters persisted via Express + MongoDB, with a JSON file fallback when no DB is configured
+- **Resume download**`
 
-Note: This will impact Vite dev & build performances.
+---
 
-## Expanding the ESLint configuration
+## Tech Stack
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+**Frontend**
+
+| Layer | Library / Tool |
+|---|---|
+| Framework | React 19, Vite 7 |
+| Styling | Tailwind CSS v4, custom CSS |
+| Animation | GSAP 3, Motion (Framer), `@use-gesture/react` |
+| 3D / WebGL | Three.js, OGL, `postprocessing` |
+| Icons | `react-icons`, `@tabler/icons-react`, Lucide |
+| UI Primitives | Radix UI (Slot), shadcn/ui (Carousel) |
+| Timeline | `react-vertical-timeline-component` |
+
+**Backend**
+
+| Layer | Library / Tool |
+|---|---|
+| Server | Node.js, Express |
+| Database | MongoDB (Mongoose) / JSON file fallback |
+| Config | `dotenv` |
+
+---
+
+## Getting Started
+
+### Prerequisites
+
+- Node.js ≥ 18
+- npm
+
+### Frontend
+
+```bash
+git clone https://github.com/Chiranth-D-Nandi/portfolio.git
+cd portfolio
+npm install
+npm run dev
+```
+
+Open [http://localhost:5173](http://localhost:5173).
+
+### Backend (enables per-project like counters)
+
+```bash
+cd server
+npm install
+# Create a .env file:
+# MONGODB_URI=<api string>
+# PORT=5000
+node index.js
+```
+
+### Build for production
+
+```bash
+npm run build
+npm run preview
+```
+
+---
+
+## Project Structure
+
+```
+portfolio/
+├── public/              # Static assets (images, GIFs, resume PDF)
+├── server/              # Express backend (likes API)
+│   └── index.js
+├── src/
+│   ├── assets/
+│   │   └── carouselImages.js   # Image arrays for each section's carousel
+│   ├── components/ui/
+│   │   ├── carousel.jsx        # Image carousel with like button
+│   │   ├── DomeGallery.jsx     # 3D dome photo gallery (Three.js)
+│   │   ├── DotGrid.jsx         # Animated dot-grid background
+│   │   ├── LogoLoop.jsx        # Scrolling tech-logo ticker
+│   │   └── Orb.jsx             # Interactive WebGL orb (OGL)
+│   ├── hooks/
+│   │   └── useNavColor.js      # Scroll-aware nav color hook
+│   ├── App.jsx                 # Main page layout and all sections
+│   └── main.jsx
+├── vite.config.js
+└── tailwind.config.js
+```
+
+---
+
+## Contact
+
+- **LinkedIn:** [chiranth-nandi](https://www.linkedin.com/in/chiranth-nandi)
+- **GitHub:** [Chiranth-D-Nandi](https://github.com/Chiranth-D-Nandi)
+- **Resume:** available for download on the live site
