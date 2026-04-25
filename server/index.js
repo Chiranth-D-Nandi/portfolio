@@ -16,8 +16,8 @@ const PORT = process.env.PORT || 5000;
 const allowedOrigins = [
   'http://localhost:5173',      // Local dev
   'http://localhost:3000',      // Alternative local dev
-  'https://portfolio-teub.onrender.com', // Production
-  'https://chiranth-nandi.vercel.app/'
+  'https://portfolio-teub.onrender.com', // Production backend
+  'https://chiranth-nandi.vercel.app'    // Production frontend (no trailing slash!)
 ];
 
 const corsOptions = {
