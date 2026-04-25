@@ -13,6 +13,7 @@ export default function ResumeRequestModal({ isOpen, onClose }) {
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
+  const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -54,7 +55,7 @@ export default function ResumeRequestModal({ isOpen, onClose }) {
 
     setLoading(true);
     try {
-      const response = await fetch('/api/resume-request', {
+      const response = await fetch(`${API_URL}/api/resume-request`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
