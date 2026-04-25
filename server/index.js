@@ -247,33 +247,25 @@ app.get('/api/resume/accept', async (req, res) => {
       return res.status(400).json({ error: 'Missing email or name' });
     }
 
-    // Read resume file from Render secret files or local fallback
-    const resumePath = process.env.NODE_ENV === 'production' 
-      ? '/etc/secrets/chiranth_cv.pdf'
-      : path.join(process.cwd(), 'resume/chiranth_cv.pdf');
-    const resumeFile = await fs.readFile(resumePath);
-
-    // Send resume to requester
+    // Send resume link to requester
+    const resumeLink = process.env.RESUME_DRIVE_LINK || 'https://drive.google.com/';
     const resumeMailOptions = {
       from: process.env.RESUME_EMAIL || 'noreply@portfolio.com',
       to: email,
       subject: 'Your Requested Resume',
       html: `
         <h2>Hello ${name}!</h2>
-        <p>Thank you for your interest. Please find the resume attached.</p>
+        <p>Thank you for your interest! Please find my resume here:</p>
+        <p><a href="${resumeLink}" style="display:inline-block;padding:10px 20px;background-color:#4CAF50;color:white;text-decoration:none;border-radius:5px;">
+          Download Resume from Google Drive
+        </a></p>
         <p>Best regards,<br/>Chiranth</p>
       `,
-      attachments: [
-        {
-          filename: 'chiranth_cv.pdf',
-          content: resumeFile,
-        },
-      ],
     };
 
     if (transporter) {
       await transporter.sendMail(resumeMailOptions);
-      console.log(`Resume sent to: ${email}`);
+      console.log(`Resume link sent to: ${email}`);
     }
 
     // Send confirmation to admin
@@ -281,7 +273,7 @@ app.get('/api/resume/accept', async (req, res) => {
       from: process.env.RESUME_EMAIL || 'noreply@portfolio.com',
       to: process.env.ADMIN_EMAIL || 'chiranth.nandi@gmail.com',
       subject: `Resume Sent - ${name}`,
-      html: `<p>Resume has been sent to <strong>${email}</strong> for reason: <strong>${reason}</strong></p>`,
+      html: `<p>Resume link has been sent to <strong>${email}</strong> for reason: <strong>${reason}</strong></p>`,
     };
 
     if (transporter) {
