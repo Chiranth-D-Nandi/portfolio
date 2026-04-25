@@ -37,6 +37,9 @@ const corsOptions = {
 app.use(cors(corsOptions));
 app.use(express.json());
 
+// Explicit OPTIONS handler for preflight requests
+app.options('*', cors(corsOptions));
+
 // Nodemailer setup (for sending resume emails)
 let transporter = null;
 
@@ -200,9 +203,9 @@ app.post('/api/resume-request', async (req, res) => {
     const rejectLink = `${baseUrl}/api/resume/reject?email=${encodeURIComponent(email)}&name=${encodeURIComponent(name)}`;
 
     // Email to admin with accept/reject buttons
-    const adminEmail = 'chiranth.nandi@gmail.com';
+    const adminEmail = process.env.ADMIN_EMAIL;
     const adminMailOptions = {
-      from: process.env.RESUME_EMAIL || 'noreply@portfolio.com',
+      from: process.env.RESUME_EMAIL,
       to: adminEmail,
       subject: `Resume Request from ${name}`,
       html: `
@@ -274,7 +277,7 @@ app.get('/api/resume/accept', async (req, res) => {
     // Send confirmation to admin
     const confirmationMailOptions = {
       from: process.env.RESUME_EMAIL || 'noreply@portfolio.com',
-      to: 'chiranth.nandi@gmail.com',
+      to: process.env.ADMIN_EMAIL || 'chiranth.nandi@gmail.com',
       subject: `Resume Sent - ${name}`,
       html: `<p>Resume has been sent to <strong>${email}</strong> for reason: <strong>${reason}</strong></p>`,
     };
