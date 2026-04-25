@@ -124,11 +124,11 @@ The resume is protected behind a gated request system for privacy:
 2. **User fills form** — Email (required), Name (required), Reason (Employer/Professor/Others)
    - If "Employer" is selected, user must provide company name
    - If "Others" is selected, user must provide custom reason
-3. **Form submitted** → Email sent to `chiranth.nandi@gmail.com` with:
+3. **Form submitted** → Email sent to admin with:
    - All request details
    - **ACCEPT & SEND RESUME** button (automatic email sent to requester with resume)
    - **REJECT REQUEST** button (silently discards request)
-4. **Resume delivered** — If approved, requester receives resume via email
+4. **Resume delivered**
 
 The resume file itself is never publicly accessible and is stored in `server/resume/` (Git-ignored for privacy).
 
