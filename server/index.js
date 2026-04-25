@@ -247,8 +247,10 @@ app.get('/api/resume/accept', async (req, res) => {
       return res.status(400).json({ error: 'Missing email or name' });
     }
 
-    // Read resume file from server/resume/ folder
-    const resumePath = path.join(process.cwd(), 'resume/chiranth_cv.pdf');
+    // Read resume file from Render secret files or local fallback
+    const resumePath = process.env.NODE_ENV === 'production' 
+      ? '/etc/secrets/chiranth_cv.pdf'
+      : path.join(process.cwd(), 'resume/chiranth_cv.pdf');
     const resumeFile = await fs.readFile(resumePath);
 
     // Send resume to requester
