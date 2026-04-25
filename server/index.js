@@ -40,6 +40,12 @@ app.use(express.json());
 // Explicit OPTIONS handler for preflight requests
 app.options('*', cors(corsOptions));
 
+// ===== HEALTH CHECK ENDPOINT =====
+// For UptimeRobot monitoring
+app.get('/health', (req, res) => {
+  res.json({ status: 'ok', timestamp: new Date().toISOString() });
+});
+
 // Nodemailer setup (for sending resume emails)
 let transporter = null;
 
