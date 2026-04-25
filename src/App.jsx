@@ -68,6 +68,7 @@ const techLogos = [
 
 import Orb from './components/ui/Orb.jsx';
 import DomeGallery from './components/ui/DomeGallery';
+import ResumeRequestModal from './components/ui/ResumeRequestModal.jsx';
 
 function App() {
   const [resumeHover, setResumeHover] = useState(false);
@@ -79,6 +80,7 @@ function App() {
   const [WorkHover, setWorkHover] = useState(false);
   const [AboutHover, setAboutHover] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [resumeModalOpen, setResumeModalOpen] = useState(false);
 
   // track mobile viewport to apply conditional inline styles where necessary
   const [isMobileView, setIsMobileView] = useState(typeof window !== 'undefined' ? window.innerWidth <= 768 : false);
@@ -151,7 +153,7 @@ function App() {
         <button className="mobile-nav-item" onClick={() => scrollToSection(projectsRef)}>Projects</button>
         <button className="mobile-nav-item" onClick={() => scrollToSection(workRef)}>Work Experience</button>
         <button className="mobile-nav-item" onClick={() => scrollToSection(aboutRef)}>About</button>
-        <a className="mobile-nav-item" href="/chiranth_cv.pdf" target="_blank" rel="noopener noreferrer" onClick={() => setMobileMenuOpen(false)}>Download Resume</a>
+        <button className="mobile-nav-item" onClick={() => { setResumeModalOpen(true); setMobileMenuOpen(false); }}>Download Resume</button>
         <div className="mobile-social-links">
           <a href="https://www.linkedin.com/in/chiranth-nandi" target="_blank" rel="noopener noreferrer">
             <SiLinkedin />
@@ -176,10 +178,8 @@ function App() {
             <SiLinkedin />
           </a>
 
-          <a
-            href="/chiranth_cv.pdf"
-            target="_blank"
-            rel="noopener noreferrer"
+          <button
+            onClick={() => setResumeModalOpen(true)}
             onMouseEnter={() => setResumeHover(true)}
             onMouseLeave={() => setResumeHover(false)}
             className="resume-btn"
@@ -192,12 +192,11 @@ function App() {
               border: '2px solid #a06ee1',
               padding: '6px 11px',
               borderRadius: '8px',
-              textDecoration: 'none',
-              display: 'inline-block'
+              cursor: 'pointer',
             }}
           >
             Download Resume
-          </a>
+          </button>
         </div>
 
         <div className="nav-right">
@@ -950,6 +949,9 @@ function App() {
           </div>
         </div>
       </div>
+
+      {/* Resume Request Modal */}
+      <ResumeRequestModal isOpen={resumeModalOpen} onClose={() => setResumeModalOpen(false)} />
     </>
   );
 }

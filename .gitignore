@@ -26,6 +26,7 @@ dist-ssr
 # Local server env and runtime files
 server/.env
 server/likes.json
+server/resume/
 
 # Ignore build outputs and local env
 /.env.local
