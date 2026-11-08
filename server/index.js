@@ -254,7 +254,7 @@ app.get('/api/resume/accept', async (req, res) => {
     }
 
     // Send resume link to requester
-    const resumeLink = process.env.RESUME_DRIVE_LINK || 'https://drive.google.com/';
+    const resumeLink = process.env.RESUME_DRIVE_LINK || 'https://drive.google.com/file/d/18lzjQhipGMAuJezl8JeUp5VMTwlR6d_f/view?usp=drive_link';
     const resumeMailOptions = {
       from: process.env.RESUME_EMAIL || 'noreply@portfolio.com',
       to: email,
