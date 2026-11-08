@@ -167,13 +167,18 @@
      - Align cards, carousels and foreground content to center
      - Keep mobile menu toggle untouched */
   .project-row,
+  .research-row,
   .work-foreground,
   .project-carousel,
+  .research-carousel,
   .project-card,
+  .research-card,
   .carousel-wrapper,
   .work-foreground > div,
   .project-row > .project-card,
-  .project-row > .project-carousel {
+  .project-row > .project-carousel,
+  .research-row > .research-card,
+  .research-row > .research-carousel {
     margin-left: auto !important;
     margin-right: auto !important;
     justify-content: center !important;
@@ -270,32 +275,38 @@
 .card { padding: 2em; }
 .read-the-docs { color: #888; }
 
-/* Projects / Work responsive adjustments */
-.project-row {
+/* Projects / Work / Research responsive adjustments */
+.project-row,
+.research-row {
   box-sizing: border-box;
 }
-.project-card {
+.project-card,
+.research-card {
   box-sizing: border-box;
 }
-.project-carousel {
+.project-carousel,
+.research-carousel {
   box-sizing: border-box;
 }
 
 @media (max-width: 900px) {
-  /* stack project rows and make carousels full width */
-  .project-row {
+  /* stack project and research rows and make carousels full width */
+  .project-row,
+  .research-row {
     flex-direction: column !important;
     gap: 20px !important;
     align-items: center !important;
     justify-content: center !important;
   }
-  .project-row > .project-card {
+  .project-row > .project-card,
+  .research-row > .research-card {
     width: 100% !important;
     max-width: 100% !important;
     display: flex !important;
     justify-content: center !important;
   }
-  .project-row > .project-carousel {
+  .project-row > .project-carousel,
+  .research-row > .research-carousel {
     flex: none !important;
     width: 100% !important;
     max-width: 100% !important;
@@ -330,9 +341,10 @@
 
 /* small phones */
 @media (max-width: 480px) {
-  .project-row { padding-left: 12px; padding-right: 12px }
-  .project-card, .project-carousel { padding-left: 6px; padding-right: 6px }
-  /* reduce project card padding to avoid clipping */
-  .project-card > div[style], .project-card > div { padding-left: 16px !important; padding-right: 16px !important }
+  .project-row, .research-row { padding-left: 12px; padding-right: 12px }
+  .project-card, .research-card, .project-carousel, .research-carousel { padding-left: 6px; padding-right: 6px }
+  /* reduce card padding to avoid clipping */
+  .project-card > div[style], .project-card > div,
+  .research-card > div[style], .research-card > div { padding-left: 16px !important; padding-right: 16px !important }
 }
 
