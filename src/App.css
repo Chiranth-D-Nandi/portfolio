@@ -41,6 +41,24 @@
   justify-content: center;
 }
 
+.hero-blogs-btn {
+  transition: all 0.3s ease;
+}
+
+.hero-blogs-btn:hover {
+  background-color: transparent !important;
+  color: #ffa900 !important;
+}
+
+.tech-writing-btn {
+  transition: all 0.3s ease;
+}
+
+.tech-writing-btn:hover {
+  background-color: transparent !important;
+  color: #a06ee1 !important;
+}
+
 /* Mobile Menu Toggle */
 .mobile-menu-toggle {
   display: none;

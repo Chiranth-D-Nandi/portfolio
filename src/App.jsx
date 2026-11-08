@@ -83,8 +83,22 @@ function App() {
     return 'portfolio';
   });
 
+  const [resumeHover, setResumeHover] = useState(false);
+  const [blogsHover, setBlogsHover] = useState(false);
+  const [projectsHover, setProjectsHover] = useState(false);
+  const [contactHover, setContactHover] = useState(false);
+  const [HomeHover, setHomeHover] = useState(false);
+  const [SkillsHover, setSkillsHover] = useState(false);
+  const [ProjHover, setProjHover] = useState(false);
+  const [WorkHover, setWorkHover] = useState(false);
+  const [AboutHover, setAboutHover] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [resumeModalOpen, setResumeModalOpen] = useState(false);
+
   useEffect(() => {
     const handlePopState = () => {
+      setBlogsHover(false);
+      setProjectsHover(false);
       const hash = window.location.hash;
       const path = window.location.pathname;
       if (path === '/blogs' || hash === '#/blogs' || hash === '#blogs') {
@@ -101,30 +115,29 @@ function App() {
     };
   }, []);
 
+  // Ensure hover states are reset whenever currentView changes
+  useEffect(() => {
+    setBlogsHover(false);
+    setProjectsHover(false);
+  }, [currentView]);
+
   const openBlogsPage = () => {
+    setBlogsHover(false);
+    setProjectsHover(false);
     setCurrentView('blogs');
     window.history.pushState({ page: 'blogs' }, '', '#/blogs');
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const backToPortfolio = () => {
+    setBlogsHover(false);
+    setProjectsHover(false);
     setCurrentView('portfolio');
     if (window.location.hash === '#/blogs' || window.location.hash === '#blogs') {
       window.history.pushState({ page: 'portfolio' }, '', window.location.pathname);
     }
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
-  const [resumeHover, setResumeHover] = useState(false);
-  const [blogsHover, setBlogsHover] = useState(false);
-  const [projectsHover, setProjectsHover] = useState(false);
-  const [contactHover, setContactHover] = useState(false);
-  const [HomeHover, setHomeHover] = useState(false);
-  const [SkillsHover, setSkillsHover] = useState(false);
-  const [ProjHover, setProjHover] = useState(false);
-  const [WorkHover, setWorkHover] = useState(false);
-  const [AboutHover, setAboutHover] = useState(false);
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [resumeModalOpen, setResumeModalOpen] = useState(false);
 
   // track mobile viewport to apply conditional inline styles where necessary
   const [isMobileView, setIsMobileView] = useState(typeof window !== 'undefined' ? window.innerWidth <= 768 : false);
@@ -253,10 +266,13 @@ function App() {
           </button>
 
           <button
-            onClick={openBlogsPage}
+            onClick={() => {
+              setBlogsHover(false);
+              openBlogsPage();
+            }}
             onMouseEnter={() => setBlogsHover(true)}
             onMouseLeave={() => setBlogsHover(false)}
-            className="resume-btn"
+            className="resume-btn tech-writing-btn"
             style={{
               backgroundColor: blogsHover ? 'transparent' : '#a06ee1',
               color: blogsHover ? '#a06ee1' : navColor,
@@ -437,7 +453,11 @@ function App() {
               <button 
                 onMouseEnter={() => setProjectsHover(true)}
                 onMouseLeave={() => setProjectsHover(false)}
-                onClick={openBlogsPage}
+                onClick={() => {
+                  setProjectsHover(false);
+                  openBlogsPage();
+                }}
+                className="hero-blogs-btn"
                 style={{
                   backgroundColor: projectsHover ? 'transparent' : '#ffa900',
                   color: projectsHover ? '#ffa900' : '#070111',
