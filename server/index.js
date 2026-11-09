@@ -275,14 +275,30 @@ app.post('/api/resume-request', async (req, res) => {
       reasonText = `Others (${otherReason})`;
     }
 
-    // Build accept/reject links
-    const baseUrl = process.env.BASE_URL || 'https://portfolio-teub.onrender.com';
-    const resumeLink = process.env.RESUME_DRIVE_LINK || 'https://drive.google.com/file/d/18lzjQhipGMAuJezl8JeUp5VMTwlR6d_f/view?usp=drive_link';
-    const acceptLink = `${baseUrl}/api/resume/accept?email=${encodeURIComponent(email)}&name=${encodeURIComponent(name)}&reason=${encodeURIComponent(reasonText)}`;
-    const rejectLink = `${baseUrl}/api/resume/reject?email=${encodeURIComponent(email)}&name=${encodeURIComponent(name)}`;
-    const mailtoReply = `mailto:${encodeURIComponent(email)}?subject=Chiranth%20D%20Nandi%20-%20Resume&body=Hi%20${encodeURIComponent(name)}%2C%0A%0AThank%20you%20for%20your%20interest!%20You%20can%20access%20my%20resume%20here%3A%0A${encodeURIComponent(resumeLink)}%0A%0ABest%20regards%2C%0AChiranth%20D%20Nandi`;
+    // Build personalized greeting
+    let greeting = `Hello ${name},`;
+    if (reason === 'Employer') {
+      greeting = companyName && companyName.trim()
+        ? `Hello ${name} from ${companyName.trim()},`
+        : `Hello ${name},`;
+    } else if (reason === 'Professor') {
+      greeting = `Hello Prof. ${name},`;
+    }
 
-    // Email to admin with accept/reject buttons and direct Gmail reply
+    const baseUrl = process.env.BASE_URL || 'https://portfolio-teub.onrender.com';
+    const resumeLink = process.env.RESUME_DRIVE_LINK || 'https://drive.google.com/drive/folders/1zfwM_A91dpm6pUH_rUOugIz9_Gnbzsak?usp=sharing';
+
+    const emailSubject = `Resume - Chiranth D Nandi`;
+    const emailBody = `${greeting}\n\nThank you for reaching out and for your interest in my profile!\n\nYou can access and view my latest resume in this folder:\n${resumeLink}\n\nPlease feel free to let me know if you would like to discuss any opportunities or projects.\n\nBest regards,\nChiranth D Nandi\nCSE(AIML) at PES University, Bengaluru\nLinkedIn: https://www.linkedin.com/in/chiranth-nandi\nGitHub: https://github.com/Chiranth-D-Nandi`;
+
+    // Gmail web compose URL (opens Gmail tab ready to send) & mailto URL (for mobile app)
+    const gmailWebUrl = `https://mail.google.com/mail/?view=cm&fs=1&to=${encodeURIComponent(email)}&su=${encodeURIComponent(emailSubject)}&body=${encodeURIComponent(emailBody)}`;
+    const mailtoUrl = `mailto:${encodeURIComponent(email)}?subject=${encodeURIComponent(emailSubject)}&body=${encodeURIComponent(emailBody)}`;
+
+    const acceptLink = `${baseUrl}/api/resume/accept?email=${encodeURIComponent(email)}&name=${encodeURIComponent(name)}&reason=${encodeURIComponent(reason)}&companyName=${encodeURIComponent(companyName || '')}`;
+    const rejectLink = `${baseUrl}/api/resume/reject?email=${encodeURIComponent(email)}&name=${encodeURIComponent(name)}`;
+
+    // Email to admin with 1-click Gmail approve buttons
     const adminEmail = process.env.ADMIN_EMAIL || '120hertzyt@gmail.com';
     const adminHtml = `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 24px; border: 1px solid #e2e8f0; border-radius: 12px; background: #ffffff;">
@@ -307,17 +323,22 @@ app.post('/api/resume-request', async (req, res) => {
         </table>
 
         <div style="margin-top: 24px; padding-top: 20px; border-top: 1px solid #e2e8f0;">
-          <p style="margin-bottom: 14px; font-weight: bold; color: #1e1b4b;">Actions:</p>
-          <div>
-            <a href="${acceptLink}" style="display: inline-block; padding: 12px 20px; margin-right: 10px; margin-bottom: 10px; background-color: #10b981; color: white; text-decoration: none; border-radius: 8px; font-weight: bold; font-size: 14px;">
-              ✓ Accept & Send Resume
+          <p style="margin-bottom: 14px; font-weight: bold; color: #1e1b4b; font-size: 15px;">Approve & Send via Gmail (from 120hertzyt@gmail.com):</p>
+          <div style="margin-bottom: 16px;">
+            <a href="${gmailWebUrl}" target="_blank" style="display: inline-block; padding: 12px 22px; margin-right: 10px; margin-bottom: 10px; background-color: #10b981; color: white; text-decoration: none; border-radius: 8px; font-weight: bold; font-size: 14px;">
+              ✓ Approve & Open Gmail Web
             </a>
-            <a href="${mailtoReply}" style="display: inline-block; padding: 12px 20px; margin-right: 10px; margin-bottom: 10px; background-color: #6366f1; color: white; text-decoration: none; border-radius: 8px; font-weight: bold; font-size: 14px;">
-              ✉ Reply via Gmail
+            <a href="${mailtoUrl}" style="display: inline-block; padding: 12px 22px; margin-right: 10px; margin-bottom: 10px; background-color: #6366f1; color: white; text-decoration: none; border-radius: 8px; font-weight: bold; font-size: 14px;">
+              ✉ Open in Gmail App (Mobile)
             </a>
-            <a href="${rejectLink}" style="display: inline-block; padding: 12px 20px; margin-bottom: 10px; background-color: #ef4444; color: white; text-decoration: none; border-radius: 8px; font-weight: bold; font-size: 14px;">
+            <a href="${rejectLink}" style="display: inline-block; padding: 12px 20px; margin-bottom: 10px; background-color: #64748b; color: white; text-decoration: none; border-radius: 8px; font-weight: bold; font-size: 14px;">
               ✕ Reject
             </a>
+          </div>
+
+          <div style="padding: 16px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; margin-top: 14px;">
+            <p style="margin: 0 0 8px 0; font-size: 13px; font-weight: 700; color: #334155;">Pre-filled Reply Preview:</p>
+            <div style="font-size: 13px; color: #1e293b; line-height: 1.6; white-space: pre-wrap; font-family: monospace; background: #ffffff; padding: 12px; border-radius: 6px; border: 1px solid #cbd5e1;">${emailBody}</div>
           </div>
         </div>
       </div>
@@ -340,93 +361,31 @@ app.post('/api/resume-request', async (req, res) => {
 // GET: Accept and send resume
 app.get('/api/resume/accept', async (req, res) => {
   try {
-    const { email, name, reason } = req.query;
+    const { email, name, reason, companyName } = req.query;
 
     if (!email || !name) {
       return res.status(400).send('<h2>Missing email or name</h2>');
     }
 
-    const resumeLink = process.env.RESUME_DRIVE_LINK || 'https://drive.google.com/file/d/18lzjQhipGMAuJezl8JeUp5VMTwlR6d_f/view?usp=drive_link';
-    const mailtoReply = `mailto:${encodeURIComponent(email)}?subject=Chiranth%20D%20Nandi%20-%20Resume&body=Hi%20${encodeURIComponent(name)}%2C%0A%0AThank%20you%20for%20your%20interest!%20You%20can%20access%20my%20resume%20here%3A%0A${encodeURIComponent(resumeLink)}%0A%0ABest%20regards%2C%0AChiranth%20D%20Nandi`;
+    const resumeLink = process.env.RESUME_DRIVE_LINK || 'https://drive.google.com/drive/folders/1zfwM_A91dpm6pUH_rUOugIz9_Gnbzsak?usp=sharing';
 
-    let directSendSuccess = false;
-    let sendErrorNotice = '';
-
-    try {
-      await sendEmail({
-        to: email,
-        subject: 'Resume from Chiranth D Nandi',
-        html: `
-          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 24px; border: 1px solid #e2e8f0; border-radius: 12px;">
-            <h2 style="color: #1e1b4b; margin-top: 0;">Hello ${name}!</h2>
-            <p style="color: #334155; line-height: 1.6;">Thank you for your interest in my background and work.</p>
-            <p style="color: #334155; line-height: 1.6;">You can view and download my latest resume via Google Drive below:</p>
-            <p style="margin: 28px 0;">
-              <a href="${resumeLink}" style="display: inline-block; padding: 14px 28px; background-color: #6366f1; color: white; text-decoration: none; border-radius: 8px; font-weight: bold; font-size: 15px;">
-                Download Resume from Google Drive
-              </a>
-            </p>
-            <p style="color: #64748b; font-size: 14px; line-height: 1.5;">Feel free to reply directly to this email or connect with me on LinkedIn.</p>
-            <br/>
-            <p style="color: #334155; margin: 0;">Best regards,<br/><strong>Chiranth D Nandi</strong><br/>
-            <a href="https://www.linkedin.com/in/chiranth-nandi" style="color: #6366f1;">LinkedIn Profile</a> | <a href="https://github.com/Chiranth-D-Nandi" style="color: #6366f1;">GitHub</a>
-            </p>
-          </div>
-        `,
-      });
-      directSendSuccess = true;
-      console.log(`Resume link sent to: ${email}`);
-    } catch (err) {
-      console.warn(`Could not send directly to ${email} via Resend:`, err.message);
-      sendErrorNotice = err.message;
+    let greeting = `Hello ${name},`;
+    if (reason === 'Employer') {
+      greeting = companyName && companyName.trim()
+        ? `Hello ${name} from ${companyName.trim()},`
+        : `Hello ${name},`;
+    } else if (reason === 'Professor') {
+      greeting = `Hello Prof. ${name},`;
     }
 
-    // Send confirmation to admin
-    const adminEmail = process.env.ADMIN_EMAIL || '120hertzyt@gmail.com';
-    try {
-      await sendEmail({
-        to: adminEmail,
-        subject: `Resume Request Processed - ${name}`,
-        html: `<p>Resume request for <strong>${name}</strong> (${email}) has been marked as accepted.</p>${directSendSuccess ? '<p>Email was sent automatically to requester.</p>' : `<p>Note: Automated delivery was skipped (${sendErrorNotice}). You can use Gmail to reply directly.</p>`}`,
-      });
-    } catch (adminErr) {
-      console.warn('Could not send confirmation to admin:', adminErr.message);
-    }
+    const emailSubject = `Resume - Chiranth D Nandi`;
+    const emailBody = `${greeting}\n\nThank you for reaching out and for your interest in my profile!\n\nYou can access and view my latest resume in this folder:\n${resumeLink}\n\nPlease feel free to let me know if you would like to discuss any opportunities or projects.\n\nBest regards,\nChiranth D Nandi\nCSE(AIML) at PES University, Bengaluru\nLinkedIn: https://www.linkedin.com/in/chiranth-nandi\nGitHub: https://github.com/Chiranth-D-Nandi`;
 
-    // Return friendly HTML status page
-    res.send(`
-      <!DOCTYPE html>
-      <html>
-      <head>
-        <meta charset="utf-8"/>
-        <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-        <title>Resume Request Accepted</title>
-        <style>
-          body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #070111; color: #fff; display: flex; align-items: center; justify-content: center; min-height: 100vh; margin: 0; padding: 20px; box-sizing: border-box; }
-          .card { background: #130b24; border: 1px solid #332252; border-radius: 12px; padding: 36px; max-width: 520px; text-align: center; box-shadow: 0 12px 40px rgba(0,0,0,0.5); }
-          h2 { color: #10b981; margin-top: 0; }
-          p { color: #cbd5e1; line-height: 1.6; }
-          .btn { display: inline-block; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: bold; margin: 8px; }
-          .btn-primary { background: #6366f1; color: white; }
-          .badge { display: inline-block; padding: 4px 12px; border-radius: 12px; font-size: 12px; margin-bottom: 16px; background: #22153d; color: #a06ee1; font-weight: 600; }
-        </style>
-      </head>
-      <body>
-        <div class="card">
-          <div class="badge">Portfolio Admin</div>
-          <h2>✓ Request Accepted</h2>
-          <p>Request from <strong>${name}</strong> (<a href="mailto:${email}" style="color: #a06ee1;">${email}</a>) was processed.</p>
-          ${directSendSuccess 
-            ? `<p style="color: #10b981; font-weight: 600;">✓ Automated email with resume link was sent to <strong>${email}</strong>.</p>`
-            : `<div style="background: rgba(245, 158, 11, 0.12); border: 1px solid #f59e0b; border-radius: 8px; padding: 14px; margin: 20px 0; text-align: left;">
-                <p style="margin: 0; color: #fbbf24; font-size: 13px;"><strong>Notice:</strong> Resend test domain only delivers to account owner. Click below to send directly via Gmail:</p>
-               </div>
-               <a href="${mailtoReply}" class="btn btn-primary">✉ Open Gmail to Send Resume</a>`
-          }
-        </div>
-      </body>
-      </html>
-    `);
+    const gmailWebUrl = `https://mail.google.com/mail/?view=cm&fs=1&to=${encodeURIComponent(email)}&su=${encodeURIComponent(emailSubject)}&body=${encodeURIComponent(emailBody)}`;
+    const mailtoUrl = `mailto:${encodeURIComponent(email)}?subject=${encodeURIComponent(emailSubject)}&body=${encodeURIComponent(emailBody)}`;
+
+    // Redirect directly to Gmail compose window
+    res.redirect(gmailWebUrl);
   } catch (error) {
     console.error('Resume accept error:', error);
     res.status(500).send(`<h2>Error handling request</h2><p>${error.message}</p>`);
