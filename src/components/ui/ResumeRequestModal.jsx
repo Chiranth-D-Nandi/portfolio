@@ -63,13 +63,18 @@ export default function ResumeRequestModal({ isOpen, onClose }) {
         body: JSON.stringify(formData),
       });
 
-      const data = await response.json();
+      let data = {};
+      try {
+        data = await response.json();
+      } catch (parseErr) {
+        data = { error: `Server error (${response.status})` };
+      }
 
       if (!response.ok) {
         throw new Error(data.error || 'Failed to submit request');
       }
 
-      setMessage('Request submitted! Please check your inbox in 2 minutes.');
+      setMessage(data.message || 'Request submitted! Please check your inbox in 2 minutes.');
       setFormData({
         email: '',
         name: '',
