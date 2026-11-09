@@ -59,7 +59,7 @@ app.get('/health', (req, res) => {
 // Email delivery setup (Resend via HTTPS on Port 443 + Nodemailer fallback)
 const RESEND_API_KEY = process.env.RESEND_API_KEY;
 const RESEND_FROM = process.env.RESEND_FROM || 'onboarding@resend.dev';
-const ADMIN_EMAIL = process.env.ADMIN_EMAIL || 'chiranth.nandi@gmail.com';
+const ADMIN_EMAIL = process.env.ADMIN_EMAIL || '120hertzyt@gmail.com';
 
 let transporter = null;
 if (process.env.RESUME_EMAIL && process.env.RESUME_EMAIL_PASSWORD) {
@@ -283,7 +283,7 @@ app.post('/api/resume-request', async (req, res) => {
     const mailtoReply = `mailto:${encodeURIComponent(email)}?subject=Chiranth%20D%20Nandi%20-%20Resume&body=Hi%20${encodeURIComponent(name)}%2C%0A%0AThank%20you%20for%20your%20interest!%20You%20can%20access%20my%20resume%20here%3A%0A${encodeURIComponent(resumeLink)}%0A%0ABest%20regards%2C%0AChiranth%20D%20Nandi`;
 
     // Email to admin with accept/reject buttons and direct Gmail reply
-    const adminEmail = process.env.ADMIN_EMAIL || 'chiranth.nandi@gmail.com';
+    const adminEmail = process.env.ADMIN_EMAIL || '120hertzyt@gmail.com';
     const adminHtml = `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 24px; border: 1px solid #e2e8f0; border-radius: 12px; background: #ffffff;">
         <h2 style="color: #1e1b4b; margin-top: 0; margin-bottom: 20px;">📄 New Resume Request</h2>
@@ -382,7 +382,7 @@ app.get('/api/resume/accept', async (req, res) => {
     }
 
     // Send confirmation to admin
-    const adminEmail = process.env.ADMIN_EMAIL || 'chiranth.nandi@gmail.com';
+    const adminEmail = process.env.ADMIN_EMAIL || '120hertzyt@gmail.com';
     try {
       await sendEmail({
         to: adminEmail,
