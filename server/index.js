@@ -11,6 +11,7 @@ dotenv.config();
 dotenv.config({ path: path.resolve(process.cwd(), 'server', '.env') });
 
 const app = express();
+app.set('trust proxy', 1);
 const PORT = process.env.PORT || 5000;
 
 // CORS configuration
@@ -107,7 +108,43 @@ async function sendEmail({ to, subject, html, text }) {
   }
 }
 
-// Choose storage: MongoDB if MONGODB_URI is set, otherwise a simple file fallback
+// Rate limiting map: client IP -> array of request timestamps within the last hour
+const resumeRateLimitMap = new Map();
+
+function checkResumeRateLimit(ip) {
+  const now = Date.now();
+  const ONE_HOUR = 60 * 60 * 1000;
+  const MAX_REQUESTS = 3;
+
+  const timestamps = resumeRateLimitMap.get(ip) || [];
+  // Keep only timestamps within the last 60 minutes
+  const recent = timestamps.filter(t => now - t < ONE_HOUR);
+
+  if (recent.length >= MAX_REQUESTS) {
+    const oldest = recent[0];
+    const minutesRemaining = Math.max(1, Math.ceil((ONE_HOUR - (now - oldest)) / (60 * 1000)));
+    return {
+      allowed: false,
+      minutesRemaining,
+    };
+  }
+
+  recent.push(now);
+  resumeRateLimitMap.set(ip, recent);
+
+  // Periodic memory cleanup
+  if (resumeRateLimitMap.size > 5000) {
+    for (const [key, times] of resumeRateLimitMap.entries()) {
+      const active = times.filter(t => now - t < ONE_HOUR);
+      if (active.length === 0) resumeRateLimitMap.delete(key);
+      else resumeRateLimitMap.set(key, active);
+    }
+  }
+
+  return { allowed: true };
+}
+
+// Storage for likes: MongoDB if MONGODB_URI is provided and connected, otherwise local file fallback
 const likesFile = path.join(process.cwd(), 'likes.json');
 
 async function readLikesFile() {
@@ -115,118 +152,96 @@ async function readLikesFile() {
     const txt = await fs.readFile(likesFile, 'utf-8');
     return JSON.parse(txt || '{}');
   } catch (e) {
-    // if file missing or invalid, return empty object
     return {};
   }
 }
 
 async function writeLikesFile(data) {
-  await fs.writeFile(likesFile, JSON.stringify(data, null, 2), 'utf-8');
+  try {
+    await fs.writeFile(likesFile, JSON.stringify(data, null, 2), 'utf-8');
+  } catch (e) {
+    console.error('Failed to write likes file:', e.message);
+  }
 }
 
+// Define Mongoose Like schema & model
+const likeSchema = new mongoose.Schema({
+  projectId: { type: String, required: true, unique: true },
+  count: { type: Number, default: 0 },
+});
+const Like = mongoose.models.Like || mongoose.model('Like', likeSchema);
+
 if (process.env.MONGODB_URI) {
-  // MongoDB connection
-  mongoose.connect(process.env.MONGODB_URI).then(() => {
-    console.log('Connected to MongoDB');
+  mongoose.connect(process.env.MONGODB_URI, {
+    serverSelectionTimeoutMS: 5000,
+  }).then(() => {
+    console.log('✓ Successfully connected to MongoDB for persistent likes');
   }).catch((err) => {
-    console.error('MongoDB connection error:', err);
+    console.error('MongoDB connection error (falling back to file storage):', err.message);
   });
+} else {
+  console.log('Notice: MONGODB_URI not configured — using file storage for likes.');
+}
 
-  const likeSchema = new mongoose.Schema({
-    projectId: { type: String, required: true, unique: true },
-    count: { type: Number, default: 0 },
-  });
-
-  const Like = mongoose.model('Like', likeSchema);
-
-  // Mongo-backed routes
-  app.get('/api/likes/:projectId', async (req, res) => {
-    try {
-      const { projectId } = req.params;
-      let like = await Like.findOne({ projectId });
-      res.json({ likes: like ? like.count : 0 });
-    } catch (error) {
-      console.error('GET error:', error);
-      res.status(500).json({ error: error.message });
+// Likes endpoints (automatic MongoDB / File fallback)
+app.get('/api/likes/:projectId', async (req, res) => {
+  try {
+    const { projectId } = req.params;
+    if (mongoose.connection.readyState === 1) {
+      const doc = await Like.findOne({ projectId });
+      return res.json({ likes: doc ? doc.count : 0 });
     }
-  });
+    const data = await readLikesFile();
+    res.json({ likes: data[projectId] || 0 });
+  } catch (error) {
+    console.error('GET likes error:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
 
-  app.post('/api/likes/:projectId', async (req, res) => {
-    try {
-      const { projectId } = req.params;
-      let like = await Like.findOneAndUpdate(
+app.post('/api/likes/:projectId', async (req, res) => {
+  try {
+    const { projectId } = req.params;
+    if (mongoose.connection.readyState === 1) {
+      const doc = await Like.findOneAndUpdate(
         { projectId },
         { $inc: { count: 1 } },
         { new: true, upsert: true }
       );
-      console.log(`Like added for ${projectId}, new count: ${like.count}`);
-      res.json({ likes: like.count });
-    } catch (error) {
-      console.error('POST error:', error);
-      res.status(500).json({ error: error.message });
+      console.log(`Like added for ${projectId} in MongoDB, new count: ${doc.count}`);
+      return res.json({ likes: doc.count });
     }
-  });
+    const data = await readLikesFile();
+    data[projectId] = (data[projectId] || 0) + 1;
+    await writeLikesFile(data);
+    console.log(`Like added for ${projectId} in file, new count: ${data[projectId]}`);
+    res.json({ likes: data[projectId] });
+  } catch (error) {
+    console.error('POST likes error:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
 
-  app.delete('/api/likes/:projectId', async (req, res) => {
-    try {
-      const { projectId } = req.params;
-      let like = await Like.findOne({ projectId });
-      if (like && like.count > 0) {
-        like.count -= 1;
-        await like.save();
+app.delete('/api/likes/:projectId', async (req, res) => {
+  try {
+    const { projectId } = req.params;
+    if (mongoose.connection.readyState === 1) {
+      let doc = await Like.findOne({ projectId });
+      if (doc && doc.count > 0) {
+        doc.count -= 1;
+        await doc.save();
       }
-      console.log(`Like removed for ${projectId}, new count: ${like ? like.count : 0}`);
-      res.json({ likes: like ? like.count : 0 });
-    } catch (error) {
-      console.error('DELETE error:', error);
-      res.status(500).json({ error: error.message });
+      return res.json({ likes: doc ? doc.count : 0 });
     }
-  });
-
-} else {
-  // File-backed routes (development fallback)
-  console.log('No MONGODB_URI found — using file-backed likes storage:', likesFile);
-
-  app.get('/api/likes/:projectId', async (req, res) => {
-    try {
-      const { projectId } = req.params;
-      const data = await readLikesFile();
-      const count = data[projectId] || 0;
-      res.json({ likes: count });
-    } catch (error) {
-      console.error('GET file error:', error);
-      res.status(500).json({ error: error.message });
-    }
-  });
-
-  app.post('/api/likes/:projectId', async (req, res) => {
-    try {
-      const { projectId } = req.params;
-      const data = await readLikesFile();
-      data[projectId] = (data[projectId] || 0) + 1;
-      await writeLikesFile(data);
-      console.log(`File like added for ${projectId}, new count: ${data[projectId]}`);
-      res.json({ likes: data[projectId] });
-    } catch (error) {
-      console.error('POST file error:', error);
-      res.status(500).json({ error: error.message });
-    }
-  });
-
-  app.delete('/api/likes/:projectId', async (req, res) => {
-    try {
-      const { projectId } = req.params;
-      const data = await readLikesFile();
-      data[projectId] = Math.max(0, (data[projectId] || 0) - 1);
-      await writeLikesFile(data);
-      console.log(`File like removed for ${projectId}, new count: ${data[projectId]}`);
-      res.json({ likes: data[projectId] });
-    } catch (error) {
-      console.error('DELETE file error:', error);
-      res.status(500).json({ error: error.message });
-    }
-  });
-}
+    const data = await readLikesFile();
+    data[projectId] = Math.max(0, (data[projectId] || 0) - 1);
+    await writeLikesFile(data);
+    res.json({ likes: data[projectId] });
+  } catch (error) {
+    console.error('DELETE likes error:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
 
 // ===== RESUME REQUEST ROUTES =====
 
@@ -234,6 +249,18 @@ if (process.env.MONGODB_URI) {
 app.post('/api/resume-request', async (req, res) => {
   try {
     const { email, name, reason, companyName, otherReason } = req.body;
+
+    // Rate limiting check by client IP (max 3 requests per 1 hour)
+    const clientIp = req.headers['x-forwarded-for']
+      ? req.headers['x-forwarded-for'].split(',')[0].trim()
+      : req.socket.remoteAddress || req.ip;
+
+    const rateLimit = checkResumeRateLimit(clientIp);
+    if (!rateLimit.allowed) {
+      return res.status(429).json({
+        error: `Rate limit reached: You can submit up to 3 resume requests per hour from this IP. Please try again in ${rateLimit.minutesRemaining} minutes.`
+      });
+    }
 
     // Validation
     if (!email || !name || !reason) {
@@ -246,6 +273,18 @@ app.post('/api/resume-request', async (req, res) => {
       reasonText = `Employer (${companyName})`;
     } else if (reason === 'Others' && otherReason) {
       reasonText = `Others (${otherReason})`;
+    }
+
+    // Optional automated voice call / notification (CallMeBot)
+    if (process.env.CALLMEBOT_URL) {
+      try {
+        const callUrl = process.env.CALLMEBOT_URL
+          .replace('{{name}}', encodeURIComponent(name))
+          .replace('{{reason}}', encodeURIComponent(reasonText));
+        fetch(callUrl).catch(e => console.warn('CallMeBot notification error:', e.message));
+      } catch (callErr) {
+        console.warn('CallMeBot trigger error:', callErr.message);
+      }
     }
 
     // Build accept/reject links
